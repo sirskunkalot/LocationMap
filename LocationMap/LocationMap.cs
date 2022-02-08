@@ -12,12 +12,14 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Jotunn.Utils;
 using UnityEngine;
 
 namespace LocationMap
 {
     [BepInPlugin(PluginGUID, PluginName, PluginVersion)]
     [BepInDependency(Jotunn.Main.ModGuid)]
+    [NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod, VersionStrictness.Minor)]
     internal class LocationMap : BaseUnityPlugin
     {
         public const string PluginGUID = "com.jotunn.LocationMap";
@@ -33,7 +35,7 @@ namespace LocationMap
 
         private void OnVanillaMapAvailable()
         {
-            Jotunn.Logger.LogInfo("Map loaded, querying location data");
+            Jotunn.Logger.LogDebug("Map loaded, querying location data");
             if (ZNet.instance.IsClientInstance())
             {
                 LocationsRPC = NetworkManager.Instance.AddRPC("locations", OnServerReceive, OnClientReceive);
@@ -53,6 +55,8 @@ namespace LocationMap
                 .OrderByDescending(x => x.m_position.z)
                 .ThenBy(x => x.m_position.x)
                 .ToList();
+
+            Jotunn.Logger.LogDebug($"Found {locations.Count} custom location instances");
             pkg.Write(locations.Count);
             foreach (var location in locations)
             {
