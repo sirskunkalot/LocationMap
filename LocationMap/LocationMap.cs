@@ -30,15 +30,15 @@ namespace LocationMap
 
         private void Awake()
         {
-            MinimapManager.OnVanillaMapAvailable += OnVanillaMapAvailable;
+            LocationsRPC = NetworkManager.Instance.AddRPC("locations", OnServerReceive, OnClientReceive);
+            MinimapManager.OnVanillaMapDataLoaded += OnVanillaMapDataLoaded;
         }
 
-        private void OnVanillaMapAvailable()
+        private void OnVanillaMapDataLoaded()
         {
             Jotunn.Logger.LogDebug("Map loaded, querying location data");
             if (ZNet.instance.IsClientInstance())
             {
-                LocationsRPC = NetworkManager.Instance.AddRPC("locations", OnServerReceive, OnClientReceive);
                 LocationsRPC.Initiate();
             }
             else
@@ -101,7 +101,7 @@ namespace LocationMap
                                 Height = 32,
                                 Rotation = RenderManager.IsometricRotation
                             }).texture;
-                        //ShaderHelper.ScaleTexture(tex, 32);
+                        
                         textures.Add(hash, tex);
                     }
 

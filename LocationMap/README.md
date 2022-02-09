@@ -1,5 +1,5 @@
-﻿# JotunnModStub
-Upon building for release, this README.md is copied into the `Package` folder for thunderstore packaging. Remember to also edit the manifest.json and supply your own mod icon.
+﻿# LocationMap
+A simple Valheim mod displaying custom locations on the minimap.
 
 ## Installation (manual)
 
