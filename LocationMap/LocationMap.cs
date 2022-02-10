@@ -5,6 +5,7 @@
 // Project: LocationMap
 
 using BepInEx;
+using BepInEx.Configuration;
 using Jotunn;
 using Jotunn.Entities;
 using Jotunn.Managers;
@@ -12,15 +13,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
-using BepInEx.Configuration;
-using Jotunn.Utils;
 using UnityEngine;
 
 namespace LocationMap
 {
     [BepInPlugin(PluginGUID, PluginName, PluginVersion)]
-    [BepInDependency(Jotunn.Main.ModGuid)]
-    [NetworkCompatibility(CompatibilityLevel.EveryoneMustHaveMod, VersionStrictness.Minor)]
+    [BepInDependency(Jotunn.Main.ModGuid, "2.5.0")]
     internal class LocationMap : BaseUnityPlugin
     {
         public const string PluginGUID = "com.jotunn.LocationMap";
@@ -78,7 +76,7 @@ namespace LocationMap
             {
                 return;
             }
-            
+
             var overlays = new Dictionary<int, MinimapManager.MapOverlay>();
             var textures = new Dictionary<int, Texture2D>();
             for (int i = 0; i < cnt; i++)
