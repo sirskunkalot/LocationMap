@@ -12,6 +12,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using BepInEx.Configuration;
 using Jotunn.Utils;
 using UnityEngine;
 
@@ -27,11 +28,14 @@ namespace LocationMap
         public const string PluginVersion = "0.0.1";
 
         private CustomRPC LocationsRPC;
+        private ConfigEntry<bool> IgnoreFogConfig;
 
         private void Awake()
         {
             LocationsRPC = NetworkManager.Instance.AddRPC("locations", OnServerReceive, OnClientReceive);
             MinimapManager.OnVanillaMapDataLoaded += OnVanillaMapDataLoaded;
+            IgnoreFogConfig = Config.Bind("General", "Ignore Fog", true,
+                "If true, location icons are always visible regardless of exploration status. Set to false to hide the locations beneath the fog.");
         }
 
         private void OnVanillaMapDataLoaded()
@@ -74,11 +78,9 @@ namespace LocationMap
             {
                 return;
             }
-
+            
+            var overlays = new Dictionary<int, MinimapManager.MapOverlay>();
             var textures = new Dictionary<int, Texture2D>();
-            var overlay = MinimapManager.Instance.GetMapOverlay("Custom Locations", true);
-            overlay.Enabled = false;
-
             for (int i = 0; i < cnt; i++)
             {
                 var hash = pkg.ReadInt();
@@ -92,6 +94,20 @@ namespace LocationMap
                         continue;
                     }
 
+                    var custom = ZoneManager.Instance.GetCustomLocation(location.m_prefabName);
+                    if (custom == null)
+                    {
+                        Jotunn.Logger.LogWarning($"Location {location.m_prefabName} is no custom location");
+                        continue;
+                    }
+
+                    if (!overlays.TryGetValue(hash, out var overlay))
+                    {
+                        overlay = MinimapManager.Instance.GetMapOverlay(custom.SourceMod.Name, IgnoreFogConfig.Value);
+                        overlay.Enabled = false;
+                        overlays.Add(hash, overlay);
+                    }
+
                     if (!textures.TryGetValue(hash, out var tex))
                     {
                         tex = RenderManager.Instance.Render(
@@ -101,7 +117,6 @@ namespace LocationMap
                                 Height = 32,
                                 Rotation = RenderManager.IsometricRotation
                             }).texture;
-                        
                         textures.Add(hash, tex);
                     }
 
@@ -129,7 +144,10 @@ namespace LocationMap
                 }
             }
 
-            overlay.OverlayTex.Apply();
+            foreach (var mapOverlay in overlays.Values)
+            {
+                mapOverlay.OverlayTex.Apply();
+            }
         }
 
         private IEnumerator OnServerReceive(long sender, ZPackage package)
