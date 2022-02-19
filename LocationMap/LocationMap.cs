@@ -39,14 +39,7 @@ namespace LocationMap
         private void OnVanillaMapDataLoaded()
         {
             Jotunn.Logger.LogDebug("Map loaded, querying location data");
-            if (ZNet.instance.IsClientInstance())
-            {
-                LocationsRPC.Initiate();
-            }
-            else
-            {
-                CreateLocationOverlay(CreateLocationPackage());
-            }
+            LocationsRPC.Initiate();
         }
 
         private ZPackage CreateLocationPackage()
@@ -150,7 +143,15 @@ namespace LocationMap
 
         private IEnumerator OnServerReceive(long sender, ZPackage package)
         {
-            LocationsRPC.SendPackage(sender, CreateLocationPackage());
+            var locations = CreateLocationPackage();
+            if (sender != ZRoutedRpc.m_instance.m_id)
+            {
+                LocationsRPC.SendPackage(sender, locations);
+            }
+            else
+            {
+                CreateLocationOverlay(locations);
+            }
             yield break;
         }
 
